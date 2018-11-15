@@ -12,15 +12,14 @@ defmodule Issues do
       :world
 
   """
-  def pagination(cursor) do
-    if cursor do
+  def pagination(cursor) when is_bitstring(cursor) do
       """
-        ,after: \\"#{cursor}\\"
-        """
-      else
-        ""
-      end
-    end
+      , after: \\"#{cursor}\\"
+      """
+  end
+  def pagination(_) do
+    ""
+  end
 
   def get_page(cursor) do
     token = System.get_env("GH_TOKEN")
@@ -58,7 +57,7 @@ defmodule Issues do
   end
 
   def get(cursor, pagenum \\ 0) do
-    if pagenum > 5 do
+    if pagenum > 10 do
       Process.exit(self, :normal)
     end
     {status_code, body} = get_page(cursor)
