@@ -13,7 +13,7 @@ defmodule Issues do
 
   """
   def get() do
-    token = ""
+    token = System.get_env("GH_TOKEN")
     org = "octocat"
     repo = "Hello-World"
     query = """
