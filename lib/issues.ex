@@ -13,7 +13,7 @@ defmodule Issues do
 
   """
   def get() do
-    token = "a5e6377d9115458bce189d0e6bb2c0e59ec3f4d7"
+    token = ""
     org = "octocat"
     repo = "Hello-World"
     query = """
