@@ -12,20 +12,24 @@ defmodule Issues do
       :world
 
   """
-  def get_page(cursor) do
-    token = System.get_env("GH_TOKEN")
-    pagination = ""
+  def pagination(cursor) do
     if cursor do
-      pagination = """
+      """
         ,after: \\"#{cursor}\\"
         """
+      else
+        ""
+      end
     end
+
+  def get_page(cursor) do
+    token = System.get_env("GH_TOKEN")
     org = "octocat"
     repo = "Hello-World"
     query = """
     { "query": "query {
       repository(owner:\\"#{org}\\", name:\\"#{repo}\\") {
-        issues(first:20 #{pagination}, states:CLOSED) {
+        issues(first:20 #{pagination(cursor)}, states:CLOSED) {
           edges {
             node {
               title url labels(first:5) {
