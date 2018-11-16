@@ -21,7 +21,7 @@ defmodule Issues do
     ""
   end
 
-  def get_issues(org, repo, cursor // nil) do
+  def get_issues(org, repo, cursor \\ nil) do
     token = System.get_env("GH_TOKEN")
     query = """
     { "query": "query {
@@ -66,7 +66,11 @@ defmodule Issues do
           :ok
         else
           edges
+          |> Enum.map(&( &1 |> Map.get("node") |> Map.get("url")))
+          |> Enum.map(&(mytask(&1)))
+          edges
           |> Enum.at(-1)
+          # get last edge cursor
           |> Map.get("cursor")
           |> IO.inspect
           # recurse to get next page
@@ -80,5 +84,8 @@ defmodule Issues do
     end
   end
 
+  def mytask(url) do
+    Task.start( fn -> IO.puts("Task: " <> IO.inspect(url)) end)
+  end
 
 end
