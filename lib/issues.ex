@@ -21,10 +21,8 @@ defmodule Issues do
     ""
   end
 
-  def get_page(cursor) do
+  def get_issues(org, repo, cursor // nil) do
     token = System.get_env("GH_TOKEN")
-    org = "octocat"
-    repo = "Hello-World"
     query = """
     { "query": "query {
       repository(owner:\\"#{org}\\", name:\\"#{repo}\\") {
@@ -45,10 +43,6 @@ defmodule Issues do
       }
     }"}
     """ |> String.replace("\n", "")
-    IO.puts(query)
-    query2 = """
-    {"query": "query { viewer { login }}"}
-    """
     resp = HTTPoison.post!("https://api.github.com/graphql",
                             query,
                             [{"Content-Type", "application/json"},
@@ -57,22 +51,28 @@ defmodule Issues do
   end
 
   def get(cursor, pagenum \\ 0) do
-    if pagenum > 10 do
+    if pagenum > 100 do
       Process.exit(self, :normal)
     end
-    {status_code, body} = get_page(cursor)
+    {status_code, body} = get_issues("octocat", "Hello-World", cursor)
     case {status_code, body} do
       {200, _} ->
-        Poison.Parser.parse!(body)
+        edges = Poison.Parser.parse!(body)
         |> Map.get("data")
         |> Map.get("repository")
         |> Map.get("issues")
         |> Map.get("edges")
-        |> Enum.at(-1)
-        |> Map.get("cursor")
-        |> IO.inspect
-        |> get(pagenum + 1)
-        :ok
+        if Enum.count(edges) == 0 do
+          :ok
+        else
+          edges
+          |> Enum.at(-1)
+          |> Map.get("cursor")
+          |> IO.inspect
+          # recurse to get next page
+          |> get(pagenum + 1)
+          :ok
+        end
       _ ->
         IO.inspect(status_code)
         IO.inspect("[ERROR]")
