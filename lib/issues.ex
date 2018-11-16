@@ -1,16 +1,5 @@
 defmodule Issues do
   @moduledoc """
-  Documentation for Issues.
-  """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Issues.hello()
-      :world
-
   """
   def pagination(cursor) when is_bitstring(cursor) do
       """
@@ -77,11 +66,11 @@ defmodule Issues do
   defp last_cursor(_), do: :finished
 
 
-  defp extract_edges!(%{"data" => %{"repository" => %{"issues" => %{"edges" => edges}}}}) do
+  def extract_edges!(%{"data" => %{"repository" => %{"issues" => %{"edges" => edges}}}}) do
     edges
   end
 
-  defp extract_edges!(invalid_body) do
+  def extract_edges!(invalid_body) do
     raise("invalid_body: #{inspect(invalid_body)}")
   end
 
