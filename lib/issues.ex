@@ -55,7 +55,6 @@ defmodule Issues do
   def issues(_, pagenum) when pagenum > 100, do: :max_pages_reached
   def issues(cursor, pagenum) do
     resp = get_issues("octocat", "Hello-World", cursor)
-    |> IO.inspect
     |> handle_response()
     |> issues(pagenum + 1)
   end
@@ -74,8 +73,9 @@ defmodule Issues do
     edges
     |> Enum.at(-1)
     |> Map.get("cursor")
-    |> IO.inspect
   end
+  defp last_cursor(_), do: :finished
+
 
   defp extract_edges!(%{"data" => %{"repository" => %{"issues" => %{"edges" => edges}}}}) do
     edges
@@ -96,7 +96,7 @@ defmodule Issues do
   def mytask(url) do
     Task.start( fn ->
       Process.sleep(1000);
-      "Task: " <> IO.inspect(url)
+      IO.puts "Task: #{inspect(self())} - #{inspect(url)}"
     end)
   end
 
