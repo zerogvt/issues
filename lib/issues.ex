@@ -1,6 +1,20 @@
 defmodule Issues do
   @moduledoc """
   """
+  use Agent
+  def start_link do
+    Agent.start_link(fn -> [] end, name: __MODULE__)
+  end
+
+  def add(url) do
+    Agent.update(__MODULE__, fn list -> [url|list] end)
+  end
+
+  def urls do
+    Agent.get(__MODULE__, fn list -> list end)
+  end
+
+  #####################################################
   def pagination(cursor) when is_bitstring(cursor) do
       """
       , after: \\"#{cursor}\\"
@@ -39,7 +53,7 @@ defmodule Issues do
     { Map.get(resp, :status_code), Map.get(resp, :body) }
   end
 
-  def issues(cursor, pagenum \\ 0)
+  def issues(cursor \\ nil, pagenum \\ 0)
   def issues(:finished, _), do: :finished
   def issues(_, pagenum) when pagenum > 100, do: :max_pages_reached
   def issues(cursor, pagenum) do
@@ -79,17 +93,45 @@ defmodule Issues do
 
   defp handle_edges([]), do: :ok
   defp handle_edges(edges) when is_list(edges) do
-    edges
-    |> Enum.map(&( &1 |> Map.get("node") |> Map.get("url")))
-    |> Enum.map(&(mytask(&1)))
+    urls = edges |> Enum.map(&( &1 |> Map.get("node") |> Map.get("url")))
+    urls |> Enum.map(&(launch(&1, :genserv)))
+    urls |> Enum.map(&(add(&1)))
+    IO.inspect(urls())
+    Process.sleep(1000)
+    urls |> Enum.map(&(talk(&1, :genserv)))
+    urls |> Enum.map(&(stop(&1, :genserv)))
     edges
   end
 
-  def mytask(url) do
+  def launch(url, :tasks) do
     Task.start( fn ->
       Process.sleep(1000);
       IO.puts "Task: #{inspect(self())} - #{inspect(url)}"
     end)
+  end
+
+  def launch(url, :agents) do
+    name = url |> String.split("/") |> List.last
+    Agent.start_link( fn ->
+                          IO.puts "Agent: #{name} - #{inspect(url)}"
+                      end,
+                      name: String.to_atom(name) )
+    Agent.stop(String.to_atom(name))
+  end
+
+  def launch(url, :genserv) do
+    name = url |> String.split("/") |> List.last |> String.to_atom
+    GenServer.start_link(Issue.Server, url, name: name)
+  end
+
+  def talk(url, :genserv) do
+    name = url |> String.split("/") |> List.last |> String.to_atom
+    GenServer.call(name, :get) |> IO.inspect()
+  end
+
+  def stop(url, :genserv) do
+    name = url |> String.split("/") |> List.last |> String.to_atom
+    GenServer.stop(name)
   end
 
 end
