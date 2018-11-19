@@ -55,7 +55,10 @@ defmodule Issues do
     |> handle_edges()
     |> last_cursor()
   end
-  defp handle_response(_), do: :error
+  defp handle_response({error, body}) do
+    raise("HTTP error: #{error}, Reply: #{body}")
+    :error
+  end
 
   defp last_cursor([]), do: :finished
   defp last_cursor(edges) when is_list(edges) do
