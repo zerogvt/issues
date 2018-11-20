@@ -29,7 +29,7 @@ defmodule Issues do
     query = """
     { "query": "query {
       repository(owner:\\"#{org}\\", name:\\"#{repo}\\") {
-        issues(first:5 #{pagination(cursor)}, states:CLOSED) {
+        issues(first:20 #{pagination(cursor)}, states:OPEN) {
           edges {
             node {
               title url labels(first:5) {
@@ -45,7 +45,7 @@ defmodule Issues do
         }
       }
     }"}
-    """ |> String.replace("\n", "")
+    """ |> String.replace("\n", "") |> IO.inspect
     resp = HTTPoison.post!("https://api.github.com/graphql",
                             query,
                             [{"Content-Type", "application/json"},
@@ -53,13 +53,14 @@ defmodule Issues do
     { Map.get(resp, :status_code), Map.get(resp, :body) }
   end
 
-  def issues(cursor \\ nil, pagenum \\ 0)
-  def issues(:finished, _), do: :finished
-  def issues(_, pagenum) when pagenum > 100, do: :max_pages_reached
-  def issues(cursor, pagenum) do
-    resp = get_issues("octocat", "Hello-World", cursor)
+  def issues(org, repo, cursor \\ nil, pagenum \\ 0)
+  def issues(_, _, :finished, _), do: :finished
+  def issues(_, _, _, pagenum) when pagenum > 100, do: :max_pages_reached
+  def issues(org, repo, cursor, pagenum) do
+    cursor = get_issues(org, repo, cursor)
+    |> IO.inspect
     |> handle_response()
-    |> issues(pagenum + 1)
+    issues(org, repo, cursor, pagenum + 1)
   end
 
   defp handle_response({200, body}) do
