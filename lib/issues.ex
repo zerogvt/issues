@@ -98,8 +98,8 @@ defmodule Issues do
     urls |> Enum.map(&(add(&1)))
     IO.inspect(urls())
     Process.sleep(1000)
-    urls |> Enum.map(&(talk(&1, :genserv)))
-    urls |> Enum.map(&(stop(&1, :genserv)))
+    #urls |> Enum.map(&(talk(&1, :genserv)))
+    #urls |> Enum.map(&(stop(&1, :genserv)))
     edges
   end
 
