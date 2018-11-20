@@ -1,0 +1,44 @@
+[
+  {
+    "request": {
+      "body": "{ \"query\": \"query {  repository(owner:\\\"octocat\\\", name:\\\"Hello-World\\\") {    issues(first:5 , states:CLOSED) {      edges {        node {          title url labels(first:5) {             edges {               node {                 name               }             }          }        }        cursor      }    }  }}\"}",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "***"
+      },
+      "method": "post",
+      "options": [],
+      "request_body": "",
+      "url": "https://api.github.com/graphql"
+    },
+    "response": {
+      "binary": false,
+      "body": "{\"data\":{\"repository\":{\"issues\":{\"edges\":[{\"node\":{\"title\":\"Hello World in all programming languages\",\"url\":\"https://github.com/octocat/Hello-World/issues/7\",\"labels\":{\"edges\":[]}},\"cursor\":\"Y3Vyc29yOnYyOpHOACg_sA==\"},{\"node\":{\"title\":\"test100\",\"url\":\"https://github.com/octocat/Hello-World/issues/10\",\"labels\":{\"edges\":[]}},\"cursor\":\"Y3Vyc29yOnYyOpHOADGL_A==\"},{\"node\":{\"title\":\"test100\",\"url\":\"https://github.com/octocat/Hello-World/issues/11\",\"labels\":{\"edges\":[]}},\"cursor\":\"Y3Vyc29yOnYyOpHOADGMAQ==\"},{\"node\":{\"title\":\"Test\",\"url\":\"https://github.com/octocat/Hello-World/issues/12\",\"labels\":{\"edges\":[]}},\"cursor\":\"Y3Vyc29yOnYyOpHOADHoFA==\"},{\"node\":{\"title\":\"Test Issue Log\",\"url\":\"https://github.com/octocat/Hello-World/issues/13\",\"labels\":{\"edges\":[]}},\"cursor\":\"Y3Vyc29yOnYyOpHOADIElA==\"}]}}}}",
+      "headers": {
+        "Server": "GitHub.com",
+        "Date": "Tue, 20 Nov 2018 09:35:14 GMT",
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Length": "802",
+        "Status": "200 OK",
+        "Cache-Control": "no-cache",
+        "X-RateLimit-Limit": "5000",
+        "X-RateLimit-Remaining": "4998",
+        "X-RateLimit-Reset": "1542710078",
+        "X-OAuth-Scopes": "read:gpg_key, read:org, read:public_key, read:repo_hook, repo, user",
+        "X-Accepted-OAuth-Scopes": "repo",
+        "X-GitHub-Media-Type": "github.v4; format=json",
+        "Access-Control-Expose-Headers": "ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type",
+        "Access-Control-Allow-Origin": "*",
+        "Strict-Transport-Security": "max-age=31536000; includeSubdomains; preload",
+        "X-Frame-Options": "deny",
+        "X-Content-Type-Options": "nosniff",
+        "X-XSS-Protection": "1; mode=block",
+        "Referrer-Policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
+        "Content-Security-Policy": "default-src 'none'",
+        "X-GitHub-Request-Id": "C6A0:327C:31822B:707A5C:5BF3D552"
+      },
+      "status_code": 200,
+      "type": "ok"
+    }
+  }
+]

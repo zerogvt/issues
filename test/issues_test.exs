@@ -5,6 +5,7 @@ defmodule IssuesTest do
 
   setup do
     ExVCR.Config.cassette_library_dir("fixture/vcr_cassettes")
+    ExVCR.Config.filter_request_headers("Authorization")
     :ok
   end
 
