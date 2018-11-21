@@ -10,7 +10,7 @@ defmodule IssuesTest do
   end
 
   setup_all do
-    HTTPoison.start
+    HTTPoison.start()
   end
 
   test "extract_edges: invalid json raises an error" do
@@ -18,7 +18,7 @@ defmodule IssuesTest do
   end
 
   test "extract_edges: valid json is parsed" do
-    data = %{"data" => %{"repository" => %{"issues" => %{ "edges" => ["A", "B", "C"]}}}}
+    data = %{"data" => %{"repository" => %{"issues" => %{"edges" => ["A", "B", "C"]}}}}
     assert Issues.extract_edges!(data) == ["A", "B", "C"]
   end
 

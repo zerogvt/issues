@@ -2,12 +2,13 @@ defmodule Issues do
   @moduledoc """
   """
   use Agent
+
   def start_link do
     Agent.start_link(fn -> [] end, name: __MODULE__)
   end
 
   def add(url) do
-    Agent.update(__MODULE__, fn list -> [url|list] end)
+    Agent.update(__MODULE__, fn list -> [url | list] end)
   end
 
   def urls do
@@ -16,19 +17,18 @@ defmodule Issues do
 
   #####################################################
   def pagination(cursor) when is_bitstring(cursor) do
-      """
-      , after: \\"#{cursor}\\"
-      """
+    """
+    , after: "#{cursor}"
+    """
   end
+
   def pagination(_) do
     ""
   end
-
-  def get_issues(org, repo, cursor \\ nil) do
-    token = System.get_env("GH_TOKEN")
-    query = """
-    { "query": "query {
-      repository(owner:\\"#{org}\\", name:\\"#{repo}\\") {
+  defp get_issues(org, repo, cursor \\ nil) do
+    q = """
+    query {
+      repository(owner:"#{org}", name:"#{repo}") {
         issues(first:20 #{pagination(cursor)}, states:OPEN) {
           edges {
             node {
@@ -44,35 +44,28 @@ defmodule Issues do
           }
         }
       }
-    }"}
-    """ |> String.replace("\n", "") |> IO.inspect
-    resp = HTTPoison.post!("https://api.github.com/graphql",
-                            query,
-                            [{"Content-Type", "application/json"},
-                            {"Authorization", "Bearer #{token}"}])
-    { Map.get(resp, :status_code), Map.get(resp, :body) }
+    }
+    """
+    |> GraphQL.query!
+    |> GraphQL.body
   end
 
   def issues(org, repo, cursor \\ nil, pagenum \\ 0)
   def issues(_, _, :finished, _), do: :finished
   def issues(_, _, _, pagenum) when pagenum > 100, do: :max_pages_reached
+
   def issues(org, repo, cursor, pagenum) do
-    cursor = get_issues(org, repo, cursor)
-    |> IO.inspect
-    |> handle_response()
+    cursor =
+      get_issues(org, repo, cursor)
+      |> handle_response
     issues(org, repo, cursor, pagenum + 1)
   end
 
-  defp handle_response({200, body}) do
+  defp handle_response(body) do
     body
-    |> Poison.Parser.parse!()
     |> extract_edges!()
     |> handle_edges()
     |> last_cursor()
-  end
-  defp handle_response({error, body}) do
-    raise("HTTP error: #{error}, Reply: #{body}")
-    :error
   end
 
   defp last_cursor([]), do: :finished
@@ -83,7 +76,6 @@ defmodule Issues do
   end
   defp last_cursor(_), do: :finished
 
-
   def extract_edges!(%{"data" => %{"repository" => %{"issues" => %{"edges" => edges}}}}) do
     edges
   end
@@ -93,46 +85,49 @@ defmodule Issues do
   end
 
   defp handle_edges([]), do: :ok
+
   defp handle_edges(edges) when is_list(edges) do
-    urls = edges |> Enum.map(&( &1 |> Map.get("node") |> Map.get("url")))
-    urls |> Enum.map(&(launch(&1, :genserv)))
-    urls |> Enum.map(&(add(&1)))
+    urls = edges |> Enum.map(&(&1 |> Map.get("node") |> Map.get("url")))
+    urls |> Enum.map(&launch(&1, :genserv))
+    urls |> Enum.map(&add(&1))
     IO.inspect(urls())
-    Process.sleep(1000)
-    #urls |> Enum.map(&(talk(&1, :genserv)))
-    #urls |> Enum.map(&(stop(&1, :genserv)))
+    # urls |> Enum.map(&(talk(&1, :genserv)))
+    # urls |> Enum.map(&(stop(&1, :genserv)))
     edges
   end
 
   def launch(url, :tasks) do
-    Task.start( fn ->
-      Process.sleep(1000);
-      IO.puts "Task: #{inspect(self())} - #{inspect(url)}"
+    Task.start(fn ->
+      Process.sleep(1000)
+      IO.puts("Task: #{inspect(self())} - #{inspect(url)}")
     end)
   end
 
   def launch(url, :agents) do
-    name = url |> String.split("/") |> List.last
-    Agent.start_link( fn ->
-                          IO.puts "Agent: #{name} - #{inspect(url)}"
-                      end,
-                      name: String.to_atom(name) )
+    name = url |> String.split("/") |> List.last()
+
+    Agent.start_link(
+      fn ->
+        IO.puts("Agent: #{name} - #{inspect(url)}")
+      end,
+      name: String.to_atom(name)
+    )
+
     Agent.stop(String.to_atom(name))
   end
 
   def launch(url, :genserv) do
-    name = url |> String.split("/") |> List.last |> String.to_atom
+    name = url |> String.split("/") |> List.last() |> String.to_atom()
     GenServer.start_link(Issue.Server, url, name: name)
   end
 
   def talk(url, :genserv) do
-    name = url |> String.split("/") |> List.last |> String.to_atom
+    name = url |> String.split("/") |> List.last() |> String.to_atom()
     GenServer.call(name, :get) |> IO.inspect()
   end
 
   def stop(url, :genserv) do
-    name = url |> String.split("/") |> List.last |> String.to_atom
+    name = url |> String.split("/") |> List.last() |> String.to_atom()
     GenServer.stop(name)
   end
-
 end
