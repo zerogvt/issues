@@ -6,23 +6,28 @@ defmodule Issue.Server do
   end
 
   def handle_call(:get, _from, url) do
-    get_issue(url)
-    |> issue_to_map
+    get(url)
+    |> IO.inspect
+    |> issue_to_map!
     |> IO.inspect
     {:reply, url, url }
   end
 
   def handle_call({:commend, commend}, _from, url) do
-    issue_id = get_issue(url) |> issue_to_map |> Map.fetch!("id")
-    comment_issue(commend, issue_id) |> IO.inspect
+    issue_id = get(url)
+    |> IO.inspect
+    |> issue_to_map!
+    |> Map.fetch!("id")
+    |> IO.inspect
+    comment(commend, issue_id)
     {:reply, url, url }
   end
 
-  def get_issue(url) do
-    token = System.get_env("GH_TOKEN")
-    query = """
-    { "query": "query {
-      resource(url:\\"#{url}\\") {
+  def get(url) when is_bitstring(url) do
+    IO.inspect(url)
+    resp = GraphQL.query!("""
+    query {
+      resource(url : "#{url}") {
         ... on Issue {
               body,
               number,
@@ -31,39 +36,21 @@ defmodule Issue.Server do
               id
             }
       }
-    }"}
-    """ |> String.replace("\n", "")
-    resp = HTTPoison.post!("https://api.github.com/graphql",
-                            query,
-                            [{"Content-Type", "application/json"},
-                            {"Authorization", "Bearer #{token}"}])
-    { Map.get(resp, :status_code), Map.get(resp, :body) }
+    }
+    """)
   end
 
-  def comment_issue(commend, node_id) do
-    token = System.get_env("GH_TOKEN")
-    query = """
-    { "query": "mutation {
-        addComment(input: {body: \\"#{commend}\\", subjectId: \\"#{node_id}\\"}) {
-          subject { id }
-        }
-      }
-    }"}
-    """ |> String.replace("\n", "") |> IO.inspect
-    resp = HTTPoison.post!("https://api.github.com/graphql",
-                            query,
-                            [{"Content-Type", "application/json"},
-                            {"Authorization", "Bearer #{token}"}])
-    { Map.get(resp, :status_code), Map.get(resp, :body) }
-  end
-
-  defp issue_to_map({200, body}) do
+  defp issue_to_map!(%{:body => body, :headers => headers, :status_code => 200}) do
     body
-    |> Poison.Parser.parse!()
+    |> IO.inspect
     |> extract!()
   end
-  defp issue_to_map({error, body}) do
-    raise("HTTP error: #{error}, Reply: #{body}")
+  defp issue_to_map!(%{:body => body, :headers => headers, :status_code => error}) do
+    raise("[ERROR] HTTP error: #{error}, Reply: #{body}")
+    :error
+  end
+  defp issue_to_map!(inp) do
+    raise("[ERROR] Invalid input #{inp}")
     :error
   end
 
@@ -72,6 +59,16 @@ defmodule Issue.Server do
   end
 
   def extract!(invalid_body) do
-    raise("invalid_body: #{inspect(invalid_body)}")
+    raise("[ERROR] invalid_body: #{inspect(invalid_body)}")
+  end
+
+  def comment(commend, issue_id) do
+    GraphQL.query!("""
+      mutation {
+        addComment(input: {body: "#{commend}", subjectId: "#{issue_id}"}) {
+          subject { id }
+        }
+      }
+    """)
   end
 end
