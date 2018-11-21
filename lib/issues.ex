@@ -15,6 +15,12 @@ defmodule Issues do
     Agent.get(__MODULE__, fn list -> list end)
   end
 
+  def main(argv) do
+    [org | repo] = argv
+    start_link
+    issues(org, repo)
+  end
+
   #####################################################
   def pagination(cursor) when is_bitstring(cursor) do
     """
