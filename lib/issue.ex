@@ -5,21 +5,29 @@ defmodule Issue.Server do
     {:ok, url}
   end
 
+  def handle_cast(:calculate, url) do
+    issue = get(url)
+    |> issue_to_map!
+    |> IO.inspect()
+    body = Map.fetch!(issue, "body")
+    id = Map.fetch!(issue, "id")
+    res = body |> Code.eval_string
+    commend(id, inspect(res))
+    {:noreply, url}
+  end
+
   def handle_call(:get, _from, url) do
     get(url)
     |> issue_to_map!
     |> IO.inspect()
-
     {:reply, url, url}
   end
 
   def handle_call({:commend, comment}, _from, url) do
-    issue_id =
-      get(url)
+    get(url)
       |> issue_to_map!
       |> Map.fetch!("id")
       |> commend(comment)
-
     {:reply, url, url}
   end
 
@@ -76,10 +84,10 @@ defmodule Issue.Server do
     raise("[ERROR] invalid_body: #{inspect(invalid_body)}")
   end
 
-  def commend(issue_id, comment) do
+  def commend(issue_id, comment_text) do
     GraphQL.query!("""
       mutation {
-        addComment(input: {body: "#{commend}", subjectId: "#{issue_id}"}) {
+        addComment(input: {body: "#{comment_text}", subjectId: "#{issue_id}"}) {
           subject { id }
         }
       }

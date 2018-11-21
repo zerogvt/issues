@@ -118,7 +118,10 @@ defmodule Issues do
 
   def launch(url, :genserv) do
     name = url |> String.split("/") |> List.last() |> String.to_atom()
-    GenServer.start_link(Issue.Server, url, name: name)
+    case GenServer.start_link(Issue.Server, url, name: name) do
+      {:ok, pid} -> GenServer.cast(pid, :calculate)
+      {ret, pid} -> {ret, pid}
+    end
   end
 
   def talk(url, :genserv) do
