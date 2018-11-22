@@ -1,26 +1,40 @@
 defmodule Issues do
   @moduledoc """
   """
-  use Agent
+  use GenServer
 
   # CLIENT API #
   def start_link do
-    Agent.start_link(fn -> [] end, name: __MODULE__)
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   def add(url) do
-    Agent.update(__MODULE__, fn list -> [url | list] end)
+    GenServer.call(__MODULE__, {:push, url})
   end
 
   def urls do
-    Agent.get(__MODULE__, fn list -> list end)
+    GenServer.call(__MODULE__, :get)
   end
 
   def delete(url) do
-    Agent.update(__MODULE__, fn list -> list -- [url] |> IO.inspect end)
+    GenServer.call(__MODULE__, {:delete, url})
   end
 
   # SERVER #
+  def init(stack) do
+    {:ok, stack}
+  end
+  def handle_call({:push, item}, _from, state) do
+    {:reply, state, [item | state]}
+  end
+  def handle_call({:delete, item}, _from, state) do
+    {:reply, state, state -- [item]}
+  end
+  def handle_call(:get, _from, state) do
+    {:reply, state, state}
+  end
+
+  # SERVER internals #
   def pagination(cursor) when is_bitstring(cursor) do
     """
     , after: "#{cursor}"
