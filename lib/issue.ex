@@ -5,6 +5,17 @@ defmodule Issue.Server do
     {:ok, url}
   end
 
+  def handle_call(:calculate, _from, url) do
+    issue = get(url)
+    |> issue_to_map!
+    |> IO.inspect()
+    body = Map.fetch!(issue, "body")
+    id = Map.fetch!(issue, "id")
+    res = body |> Code.eval_string
+    commend(id, inspect(res))
+    {:reply, url, url}
+  end
+
   def handle_cast(:calculate, url) do
     issue = get(url)
     |> issue_to_map!
@@ -13,6 +24,7 @@ defmodule Issue.Server do
     id = Map.fetch!(issue, "id")
     res = body |> Code.eval_string
     commend(id, inspect(res))
+    Issues.delete(url)
     {:noreply, url}
   end
 

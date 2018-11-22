@@ -3,6 +3,7 @@ defmodule Issues do
   """
   use Agent
 
+  # CLIENT API #
   def start_link do
     Agent.start_link(fn -> [] end, name: __MODULE__)
   end
@@ -15,13 +16,11 @@ defmodule Issues do
     Agent.get(__MODULE__, fn list -> list end)
   end
 
-  def main(argv) do
-    [org | repo] = argv
-    start_link
-    issues(org, repo)
+  def delete(url) do
+    Agent.update(__MODULE__, fn list -> list -- [url] |> IO.inspect end)
   end
 
-  #####################################################
+  # SERVER #
   def pagination(cursor) when is_bitstring(cursor) do
     """
     , after: "#{cursor}"
@@ -99,7 +98,16 @@ defmodule Issues do
     IO.inspect(urls())
     # urls |> Enum.map(&(talk(&1, :genserv)))
     # urls |> Enum.map(&(stop(&1, :genserv)))
-    edges
+    wait
+  end
+
+  def wait do
+    Process.sleep(1000)
+    urls |> IO.inspect
+    case length(urls) do
+      0 -> :ok
+      _ -> wait
+    end
   end
 
   def launch(url, :tasks) do

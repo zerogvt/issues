@@ -32,7 +32,7 @@ defmodule Issues.MixProject do
   end
 
   defp escript_config do
-    [ main_module: Issues]
+    [ main_module: Main]
   end
 
 end
