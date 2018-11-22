@@ -11,7 +11,8 @@ defmodule Issue.Server do
     |> IO.inspect()
     body = Map.fetch!(issue, "body")
     id = Map.fetch!(issue, "id")
-    res = body |> Code.eval_string
+    # res = body |> Code.eval_string
+    res = "Done"
     commend(id, inspect(res))
     Issues.delete(url)
     {:noreply, url}
