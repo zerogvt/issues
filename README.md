@@ -1,6 +1,6 @@
 # Issues
 
-Just a toy application I wrote while I'm learning Elixir.
+Just a toy application I wrote while I'm learning Elixir and experiment with github graphQL API.
 The application will scan a github repo and pick up all the open issues on it.
 Then it will execute the body of each issue and write up the result as a commend
 in that issue.
