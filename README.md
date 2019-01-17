@@ -22,3 +22,6 @@ Use a repo that you own/control if you play around with it.
 4. `export GH_TOKEN=YOUR_GITHUB_API_TOKEN`
 5. `./issues zerogvt test_issues`
 
+## Tests:
+`mix test`
+
