@@ -44,7 +44,7 @@ defmodule Issues do
   def pagination(_) do
     ""
   end
-  defp get_issues(org, repo, cursor \\ nil) do
+  def get_issues(org, repo, cursor \\ nil) do
     q = """
     query {
       repository(owner:"#{org}", name:"#{repo}") {
