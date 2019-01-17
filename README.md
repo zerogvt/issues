@@ -1,3 +1,5 @@
+![Build Status](https://travis-ci.org/zerogvt/issues.svg?branch=master)
+
 # Issues
 
 Just a toy application I wrote while I'm learning Elixir and experiment with github graphQL API.
